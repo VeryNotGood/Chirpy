@@ -1,16 +1,35 @@
 package main
 
 import (
+	"VeryNotGood/Chirpy/internal/database"
 	"VeryNotGood/Chirpy/middleware"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	godotenv.Load()
+
 	const port = "8080"
 
+	dbURL := os.Getenv("DB_URL")
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("Error opening database... %v", err)
+	}
+
+	dbQueries := database.New(db)
+
 	apiCfg := new(middleware.ApiConfig)
+
+	apiCfg.DBQuery = dbQueries
 
 	mux := http.NewServeMux()
 
