@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"VeryNotGood/Chirpy/internal/database"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,7 +10,8 @@ import (
 )
 
 type ApiConfig struct {
-	fileServerHits atomic.Int32
+	FileServerHits atomic.Int32
+	DBQuery        *database.Queries
 }
 
 type parameters struct {
@@ -30,7 +32,7 @@ type cleanedResponse struct {
 
 func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileServerHits.Add(1)
+		cfg.FileServerHits.Add(1)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -38,13 +40,13 @@ func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
 func (cfg *ApiConfig) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
-	w.Write([]byte(fmt.Sprintf("<html>\n<body>\n<h1>Welcome, Chirpy Admin</h1>\n<p>Chirpy has been visited %d times!</p>\n</body>\n</html>", cfg.fileServerHits.Load())))
+	w.Write([]byte(fmt.Sprintf("<html>\n<body>\n<h1>Welcome, Chirpy Admin</h1>\n<p>Chirpy has been visited %d times!</p>\n</body>\n</html>", cfg.FileServerHits.Load())))
 }
 
 func (cfg *ApiConfig) ResetHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(200)
-	cfg.fileServerHits.Store(0)
+	cfg.FileServerHits.Store(0)
 }
 
 func (cfg *ApiConfig) ValidateChirp(w http.ResponseWriter, r *http.Request) {
